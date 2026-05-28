@@ -255,88 +255,209 @@ def save_results_csv(rows, filename):
 def make_figures(rows, outdir="figures"):
     os.makedirs(outdir, exist_ok=True)
 
+    # -----------------------------
+    # Global plot styling
+    # -----------------------------
+    plt.rcParams.update({
+        "font.size": 18,
+        "axes.labelsize": 26,
+        "xtick.labelsize": 22,
+        "ytick.labelsize": 22,
+        "legend.fontsize": 22,
+        "axes.linewidth": 1.8,
+        "xtick.major.width": 1.6,
+        "ytick.major.width": 1.6,
+        "xtick.minor.width": 1.2,
+        "ytick.minor.width": 1.2,
+        "xtick.major.size": 7,
+        "ytick.major.size": 7,
+        "xtick.minor.size": 4,
+        "ytick.minor.size": 4,
+        "mathtext.fontset": "dejavusans",
+    })
+
     n_values = sorted(set(row["n"] for row in rows))
 
+    def clean_axes(ax):
+        """Make axes look like the reference figure."""
+        ax.spines["top"].set_visible(True)
+        ax.spines["right"].set_visible(True)
+
+        for spine in ax.spines.values():
+            spine.set_linewidth(1.8)
+
+        ax.tick_params(direction="out", width=1.6, length=7)
+        ax.grid(False)
+
+    # -----------------------------
     # Figure 1: recovery overlap vs epsilon
-    fig, ax = plt.subplots(figsize=(6.2, 4.4))
+    # -----------------------------
+    fig, ax = plt.subplots(figsize=(6.8, 4.8), dpi=300)
+
     for n in n_values:
         sub = sorted([row for row in rows if row["n"] == n], key=lambda x: x["eps"])
         x = np.array([row["eps"] for row in sub])
         y = np.array([row["mrec_mean"] for row in sub])
         yerr = np.array([row["mrec_se"] for row in sub])
-        ax.errorbar(x, y, yerr=yerr, marker="o", capsize=2, label=f"n={n}")
-    ax.set_xlabel(r"Privacy budget $\epsilon$")
-    ax.set_ylabel(r"Recovery overlap $m_{\rm rec}$")
-    ax.set_title("Figure 1: Recovery overlap vs privacy budget")
-    ax.set_ylim(-0.03, 1.03)
-    ax.legend(frameon=False)
+
+        ax.errorbar(
+            x, y, yerr=yerr,
+            marker="o",
+            markersize=8,
+            linewidth=2.6,
+            capsize=3,
+            elinewidth=1.7,
+            label=rf"$n = {n:,}$"
+        )
+
+    ax.set_xlabel(r"$\epsilon$", labelpad=8)
+    ax.set_ylabel(r"$m_{\mathrm{rec}}$", labelpad=8)
+
+    # Slightly expanded y-limit
+    ax.set_ylim(-0.06, 1.08)
+
+    ax.legend(frameon=False, loc="center right")
+    clean_axes(ax)
+
     fig.tight_layout()
-    fig.savefig(os.path.join(outdir, "fig1_recovery_vs_epsilon.png"), dpi=300)
+    fig.savefig(os.path.join(outdir, "fig1_recovery_vs_epsilon.png"),
+                dpi=300, bbox_inches="tight")
+    fig.savefig(os.path.join(outdir, "fig1_recovery_vs_epsilon.svg"),
+                bbox_inches="tight")
     plt.close(fig)
 
+    # -----------------------------
     # Figure 2: recovery overlap vs lambda
-    fig, ax = plt.subplots(figsize=(6.2, 4.4))
+    # -----------------------------
+    fig, ax = plt.subplots(figsize=(6.8, 4.8), dpi=300)
+
     for n in n_values:
         sub = sorted([row for row in rows if row["n"] == n], key=lambda x: x["lambda"])
         x = np.array([row["lambda"] for row in sub])
         y = np.array([row["mrec_mean"] for row in sub])
         yerr = np.array([row["mrec_se"] for row in sub])
-        ax.errorbar(x, y, yerr=yerr, marker="o", capsize=2, label=f"n={n}")
+
+        ax.errorbar(
+            x, y, yerr=yerr,
+            marker="o",
+            markersize=8,
+            linewidth=2.6,
+            capsize=3,
+            elinewidth=1.7,
+            label=rf"$n = {n:,}$"
+        )
+
     ax.set_xscale("log")
-    ax.set_xlabel(r"Scaling variable $\lambda = n a^2 \tanh^2(\epsilon/2)/\log d$")
-    ax.set_ylabel(r"Recovery overlap $m_{\rm rec}$")
-    ax.set_title("Figure 2: Recovery overlap collapses against scaling variable")
-    ax.set_ylim(-0.03, 1.03)
-    ax.legend(frameon=False)
+    ax.set_xlabel(r"$\lambda$", labelpad=8)
+    ax.set_ylabel(r"$m_{\mathrm{rec}}$", labelpad=8)
+
+    # Slightly expanded y-limit
+    ax.set_ylim(-0.06, 1.08)
+
+    # Usually no legend needed here if Figure 1 already has it,
+    # but keep it if you want each figure to stand alone.
+    # ax.legend(frameon=False, loc="lower right")
+
+    clean_axes(ax)
+
     fig.tight_layout()
-    fig.savefig(os.path.join(outdir, "fig2_recovery_vs_lambda.png"), dpi=300)
+    fig.savefig(os.path.join(outdir, "fig2_recovery_vs_lambda.png"),
+                dpi=300, bbox_inches="tight")
+    fig.savefig(os.path.join(outdir, "fig2_recovery_vs_lambda.svg"),
+                bbox_inches="tight")
     plt.close(fig)
 
+    # -----------------------------
     # Figure 3: entropy collapse vs lambda
-    fig, ax = plt.subplots(figsize=(6.2, 4.4))
+    # -----------------------------
+    fig, ax = plt.subplots(figsize=(6.8, 4.8), dpi=300)
+
     for n in n_values:
         sub = sorted([row for row in rows if row["n"] == n], key=lambda x: x["lambda"])
         x = np.array([row["lambda"] for row in sub])
         y = np.array([row["mpriv_mean"] for row in sub])
         yerr = np.array([row["mpriv_se"] for row in sub])
-        ax.errorbar(x, y, yerr=yerr, marker="o", capsize=2, label=f"n={n}")
+
+        ax.errorbar(
+            x, y, yerr=yerr,
+            marker="o",
+            markersize=8,
+            linewidth=2.6,
+            capsize=3,
+            elinewidth=1.7,
+            label=rf"$n = {n:,}$"
+        )
+
     ax.set_xscale("log")
-    ax.set_xlabel(r"Scaling variable $\lambda$")
-    ax.set_ylabel(r"Entropy-collapse exposure $m_{\rm priv}$")
-    ax.set_title("Figure 3: Posterior entropy collapse vs scaling variable")
-    ax.set_ylim(-0.03, 1.03)
-    ax.legend(frameon=False)
+    ax.set_xlabel(r"$\lambda$", labelpad=8)
+    ax.set_ylabel(r"$m_{\mathrm{priv}}$", labelpad=8)
+
+    # Slightly expanded y-limit
+    ax.set_ylim(-0.06, 1.08)
+
+    # ax.legend(frameon=False, loc="lower right")
+
+    clean_axes(ax)
+
     fig.tight_layout()
-    fig.savefig(os.path.join(outdir, "fig3_entropy_collapse_vs_lambda.png"), dpi=300)
+    fig.savefig(os.path.join(outdir, "fig3_entropy_collapse_vs_lambda.png"),
+                dpi=300, bbox_inches="tight")
+    fig.savefig(os.path.join(outdir, "fig3_entropy_collapse_vs_lambda.svg"),
+                bbox_inches="tight")
     plt.close(fig)
 
+    # -----------------------------
     # Figure 4: susceptibility-like finite-difference slope
-    # Use the middle n value as the default finite-size slice.
+    # -----------------------------
     n_mid = n_values[len(n_values) // 2]
     sub = sorted([row for row in rows if row["n"] == n_mid], key=lambda x: x["lambda"])
+
     x = np.array([row["lambda"] for row in sub])
     mrec = np.array([row["mrec_mean"] for row in sub])
     mpriv = np.array([row["mpriv_mean"] for row in sub])
 
-    # A derivative with respect to log(lambda) is more visually useful here because
-    # lambda spans orders of magnitude. This highlights the finite-size crossover
-    # region instead of over-weighting the tiny-lambda regime.
     logx = np.log(x)
     chi_rec = np.gradient(mrec, logx)
     chi_priv = np.gradient(mpriv, logx)
 
-    fig, ax = plt.subplots(figsize=(6.2, 4.4))
-    ax.plot(x, chi_rec, marker="o", label=r"$d m_{\rm rec}/d\log\lambda$")
-    ax.plot(x, chi_priv, marker="s", label=r"$d m_{\rm priv}/d\log\lambda$")
-    ax.set_xscale("log")
-    ax.set_xlabel(r"Scaling variable $\lambda$")
-    ax.set_ylabel(r"Finite-size susceptibility $dm/d\log\lambda$")
-    ax.set_title(f"Figure 4: Critical region from susceptibility-like peak, n={n_mid}")
-    ax.legend(frameon=False)
-    fig.tight_layout()
-    fig.savefig(os.path.join(outdir, "fig4_susceptibility_vs_lambda.png"), dpi=300)
-    plt.close(fig)
+    fig, ax = plt.subplots(figsize=(6.8, 4.8), dpi=300)
 
+    ax.plot(
+        x, chi_rec,
+        marker="o",
+        markersize=8,
+        linewidth=2.6,
+        label=r"$m_{\mathrm{rec}}$"
+    )
+
+    ax.plot(
+        x, chi_priv,
+        marker="s",
+        markersize=8,
+        linewidth=2.6,
+        label=r"$m_{\mathrm{priv}}$"
+    )
+
+    ax.set_xscale("log")
+    ax.set_xlabel(r"$\lambda$", labelpad=8)
+    # ax.set_ylabel(r"$\frac{d m}{d \log \lambda}$", labelpad=8)
+    ax.set_ylabel(r"$\dfrac{d m}{d \log \lambda}$", labelpad=8)
+
+    # Add vertical room for the peak
+    ymin = min(np.min(chi_rec), np.min(chi_priv))
+    ymax = max(np.max(chi_rec), np.max(chi_priv))
+    yrange = ymax - ymin
+    ax.set_ylim(ymin - 0.15 * yrange, ymax + 0.18 * yrange)
+
+    ax.legend(frameon=False, loc="upper left")
+    clean_axes(ax)
+
+    fig.tight_layout()
+    fig.savefig(os.path.join(outdir, "fig4_susceptibility_vs_lambda.png"),
+                dpi=300, bbox_inches="tight")
+    # fig.savefig(os.path.join(outdir, "fig4_susceptibility_vs_lambda.svg"),
+    #             bbox_inches="tight")
+    plt.close(fig)
 
 def main():
     outdir = "ldp_simulation_outputs"
